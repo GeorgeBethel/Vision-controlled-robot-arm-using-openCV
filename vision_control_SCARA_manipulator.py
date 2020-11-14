@@ -20,7 +20,7 @@ phi=0
 
 #setting GPIO pins
 
-IR_sensor = 4
+IR_sensor = 4  # IR sensor to detect when an object enter the field of view 
 
 #Stepper motor variables
 
@@ -67,6 +67,8 @@ GPIO.setup(elbow_encoder, GPIO.INPUT)
 GPIO.setup(lower_arm_encoder, GPIO.INPUT)
 GPIO.setup(IR_sensor, GPIO.INPUT)
 
+
+# function to take the stepper motor to it's home position
 
 def take_stepper_to_home():
 
@@ -339,7 +341,8 @@ while True:
         	#break
 
     	while True:
-		if GPIO.input(IR_sensor) == 1:
+
+		if GPIO.input(IR_sensor) == 1:  # if the sensor picks up an object, it captures the frame and gets the difference
 
 			ret,frame=cap.read()
 
