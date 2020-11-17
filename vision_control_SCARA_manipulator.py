@@ -3,6 +3,8 @@ code on vision controlled robot arm using openCV for background subtraction and 
 written on the 13th of November 2020
 
 '''
+from imutils.video import VideoStream
+import imutils
 import numpy as np
 import cv2
 import math
@@ -71,98 +73,211 @@ GPIO.setup(IR_sensor, GPIO.INPUT)
 # function to take the stepper motor to it's home position
 
 def take_stepper_to_home():
-
-	if GPIO.input(elbow_encoder) == 1:
-
-        	elbow_stepper_LastPos = 90
     
-        #break
-    
-    	else:
+    if GPIO.input(elbow_encoder) == 1:
+        elbow_stepper_LastPos = 90
         
-        	GPIO.output(elbow_stepper_dir_pin, True)
-
-        	for angle in range(90):
-            		GPIO.output(elbow_stepper_step_pin, True)
-            		time.sleep(3)
-            		GPIO.output(elbow_stepper_step_pin, False)
-            		time.sleep(3)
-        #break
+    else:
+        
+        GPIO.output(elbow_stepper_dir_pin, True)
+        
+        for angle in range(90):
+            
+            GPIO.output(elbow_stepper_step_pin, True)
+            time.sleep(3)
+            GPIO.output(elbow_stepper_step_pin, False)
+            time.sleep(3)
     
-    	if GPIO.input(lower_arm_encoder) == 1:
-
-        	lower_arm_stepper_LastPos = 90
+    if GPIO.input(lower_arm_encoder) == 1:
+        
+        lower_arm_stepper_LastPos = 90
         
         	#break
     
-    	else:
-        	GPIO.output(lower_arm_stepper_dir_pin, True)
-
-        	for angle in range(90):
-            		GPIO.output(lower_arm_stepper_step_pin, True)
-            		time.sleep(3)
-            		GPIO.output(lower_arm_stepper_step_pin, False)
-            		time.sleep(3)
+    else:
+        
+        GPIO.output(lower_arm_stepper_dir_pin, True)
+        for angle in range(90):
+            
+            GPIO.output(lower_arm_stepper_step_pin, True)
+            time.sleep(3)
+            GPIO.output(lower_arm_stepper_step_pin, False)
+            time.sleep(3)
+            
         
         	#break
-        
 
 def inverseKinematics(x,y):
 
-    	try:
-        	theta2 =math.acos(((x**2) + (y**2)-(L1**2)-(L2**2)) / (2 * L1 * L2))
-
-        	if x < 0 and y < 0:
-            		theta2 = (-1) * theta2
-
-        		theta1 = math.atan(x/y) - math.atan((L2 * math.sin(theta2)) / (L1 + L2 * math.cos(theta2)))
-
-        		theta2 = theta2 * 180/math.pi
-
-        		theta1 = theta1 * 180/math.pi
-        		# Angles adjustment depending in which quadrant the final tool coordinate x,y is
-
-        	if x >= 0 and y >= 0:     # 1st quadrant
-            		theta1 = 90 -theta1
-
-        	if x < 0 and y > 0:       # 2nd quadrant
-            		theta1 = 90 - theta1
-
-        	if x < 0 and y < 0:       # 3rd quadrant
-            		theta1 = 270 - theta1
-            		phi = 270 - theta1 - theta2
-            		phi = (-1) * phi
-
-        	if x > 0 and y < 0:       # 4th quadrant
-            		theta1 = -90 - theta1
-
-        	if x < 0 and y == 0:
-            		theta1 = 270 + theta1
+	try:
         
-        	# Calculate "phi" angle so gripper is parallel to the X axis
+		theta2 =math.acos(((x**2) + (y**2)-(L1**2)-(L2**2)) / (2 * L1 * L2))
+		
+		if x < 0 and y < 0:
 
-        	phi = 90 + theta1 + theta2
+			theta2 = (-1) * theta2
+		    	theta1 = math.atan(x/y) - math.atan((L2 * math.sin(theta2)) / (L1 + L2 * math.cos(theta2)))
+		    	theta2 = theta2 * 180/math.pi
+		    	theta1 = theta1 * 180/math.pi
+				# Angles adjustment depending in which quadrant the final tool coordinate x,y is
+		if x >= 0 and y >= 0:     # 1st quadrant
+		    	theta1 = 90 -theta1
 
-        	phi = (-1) * phi
 
-        	# Angles adjustments depending in which quadrant the final tool coordinate x,y is
-        	if x < 0 and y < 0:
-            		phi = 270 - theta1 - theta2 
+		if x < 0 and y > 0:       # 2nd quadrant
+		    	theta1 = 90 - theta1
 
-        	if abs(phi) > 165:
-            		phi = 180 + phi
 
-        	theta1 = math.ceil(theta1)
-        	print("theta1: ",theta1)
-        	theta2 = math.ceil(theta2)
-        	print("theta2: ",theta2)
-        	phi = math.ceil(phi)
-        	print("phi: ",phi)
+		if x < 0 and y < 0:       # 3rd quadrant
+		    	theta1 = 270 - theta1
+		    	phi = 270 - theta1 - theta2
+		    	phi = (-1) * phi
+		    		
+		if x > 0 and y < 0:       # 4th quadrant
+		    	theta1 = -90 - theta1
 
-        	stepsPerRevolution_elbow = theta1
-        	stepsPerRevolution_lower_arm = theta2
+		if x < 0 and y == 0:
+		    	theta1 = 270 + theta1
+		        
+			# Calculate "phi" angle so gripper is parallel to the X axis
 
-        	# driving arm down the rail
+		phi = 90 + theta1 + theta2
+
+		phi = (-1) * phi
+
+			# Angles adjustments depending in which quadrant the final tool coordinate x,y is
+		if x < 0 and y < 0:
+		    	phi = 270 - theta1 - theta2
+
+		if abs(phi) > 165:
+		    	phi = 180 + phi
+
+		theta1 = math.ceil(theta1)
+		print("theta1: ",theta1)
+		theta2 = math.ceil(theta2)
+		print("theta2: ",theta2)
+		phi = math.ceil(phi)
+		print("phi: ",phi)
+		
+		stepsPerRevolution_elbow = theta1
+		stepsPerRevolution_lower_arm = theta2
+		
+			# driving arm up the rail
+			
+		GPIO.output(lift_stepper_dir_pin, False)
+		for angle in range(lift_height):
+		    	GPIO.output(lift_stepper_step_pin, True)
+		    	time.sleep(3)
+		    	GPIO.output(lift_stepper_step_pin, False)
+		    	time.sleep(3)
+		lift_stepper_LastPos = lift_height
+
+		# positioning the elbow link
+		
+		if stepsPerRevolution_elbow <= 90:
+		    	GPIO.output(elbow_stepper_dir_pin, True)
+		    	for angle in range(stepsPerRevolution_elbow):
+		        	GPIO.output(elbow_stepper_step_pin, True)
+		        	time.sleep(3)
+		        	GPIO.output(elbow_stepper_step_pin, False)
+		        	time.sleep(3)
+		    	elbow_stepper_LastPos = stepsPerRevolution_elbow
+			#break
+			
+		 elif stepsPerRevolution_elbow > 90:
+		    	GPIO.output(elbow_stepper_dir_pin, False)
+		    	for angle in range(stepsPerRevolution_elbow - 90):
+		        	GPIO.output(elbow_stepper_step_pin, True)
+		        	time.sleep(3)
+				GPIO.output(elbow_stepper_step_pin, False)
+				time.sleep(3)
+		    	elbow_stepper_LastPos = stepsPerRevolution_elbow
+				#break
+			
+		
+		# positioning the lower arm link for picking
+
+		if stepsPerRevolution_lower_arm <= 90:
+		    	GPIO.output(lower_arm_stepper_dir_pin, True)
+		    	for angle in range(stepsPerRevolution_lower_arm):
+		        	GPIO.output(lower_arm_stepper_step_pin, True)
+		        	time.sleep(3)
+		        	GPIO.output(lower_arm_stepper_step_pin, False)
+		        	time.sleep(3)
+		    	lower_arm_stepper_LastPos = stepsPerRevolution_lower_arm
+				#break
+
+		elif stepsPerRevolution_elbow > 90:
+		    	GPIO.output(elbow_stepper_dir_pin, False)
+		    	for angle in range(stepsPerRevolution_elbow):
+		        	GPIO.output(lower_arm_stepper_step_pin, True)
+		        	time.sleep(3)
+		        	GPIO.output(lower_arm_stepper_step_pin, False)
+		        	time.sleep(3)
+		    	lower_arm_stepper_LastPos = stepsPerRevolution_lower_arm
+				#break        
+			
+			# activating gripper
+
+		GPIO.output(gripper_suction_a, True)
+		GPIO.output(gripper_suction_a, False)
+
+			##########################################################
+			#                                                        #
+			# driving down the guide rails                           #
+			#                                                        #
+			##########################################################
+
+			# driving arm up the rail to lift off the object
+
+		GPIO.output(lift_stepper_dir_pin, True)
+		for angle in range(lift_height):
+		    	GPIO.output(lift_stepper_step_pin, True)
+		    	time.sleep(3)
+		    	GPIO.output(lift_stepper_step_pin, False)
+		  	time.sleep(3)
+		lift_stepper_LastState = lift_height    # recording last height of the assembly
+
+		if elbow_stepper_LastState <= 90:
+		    	GPIO.output(elbow_stepper_dir_pin, True)
+		    	for angle in range(elbow_stepper_LastState + 100):
+		        	GPIO.output(elbow_stepper_step_pin, True)
+		        	time.sleep(3)
+		        	GPIO.output(elbow_stepper_step_pin, False)
+		        	time.sleep(3)
+		    	elbow_stepper_LastState = elbow_stepper_LastState + 100
+		
+		elif elbow_stepper_LastState > 90:
+		    	GPIO.output(elbow_stepper_dir_pin, False)
+		    	for angle in range(elbow_stepper_LastState - 100):
+		        	GPIO.output(elbow_stepper_step_pin, True)
+		        	time.sleep(3)
+		        	GPIO.output(elbow_stepper_step_pin, False)
+		        	time.sleep(3)
+		    	elbow_stepper_LastState = elbow_stepper_LastState - 100
+
+			# positioning lower arm link for dropping object
+
+		if lower_arm_stepper_LastState <= 90:
+
+		    	GPIO.output(lower_arm_stepper_dir_pin, True)
+		    	for angle in range(lower_arm_stepper_LastState + 50):
+		        	GPIO.output(lower_arm_stepper_step_pin, True)
+		        	time.sleep(3)
+		        	GPIO.output(lower_arm_stepper_LastState, False)
+		        	time.sleep(3)
+		    	lower_arm_stepper_LastState = lower_arm_stepper_LastState + 50
+		    		
+		elif lower_arm_stepper_LastState > 90:
+			GPIO.output(lower_arm_stepper_dir_pin, False)
+			for angle in range(lower_arm_stepper_LastState - 50):
+		            	GPIO.output(lower_arm_stepper_step_pin, True)
+		            	time.sleep(3)
+		            	GPIO.output(lower_arm_stepper_step_pin, False)
+		            	time.sleep(3)
+		    	lower_arm_stepper_LastState = lower_arm_stepper_LastState - 50
+
+		# driving arm down the rail to drop
 
 		GPIO.output(lift_stepper_dir_pin, False)
 		for angle in range(lift_height):
@@ -171,158 +286,39 @@ def inverseKinematics(x,y):
 		    	GPIO.output(lift_stepper_step_pin, False)
 		    	time.sleep(3)
 		    
-		lift_stepper_LastPos = lift_height
+		lift_stepper_LastState = lift_height
 
-		# positioning the elbow link
+			# deactivating gripper for releasing the object
 
-		if stepsPerRevolution_elbow <= 90:
-		    	GPIO.output(elbow_stepper_dir_pin, True)
-		    	for angle in range(stepsPerRevolution_elbow):
-		        	GPIO.output(elbow_stepper_step_pin, True)
-		        	time.sleep(3)
-		        	GPIO.output(elbow_stepper_step_pin, False)
-		        	time.sleep(3)
-			elbow_stepper_LastPos = stepsPerRevolution_elbow
-		#break
-		
-		elif stepsPerRevolution_elbow > 90:
-		    	GPIO.output(elbow_stepper_dir_pin, False)
-		    	for angle in range(stepsPerRevolution_elbow):
-		        	GPIO.output(elbow_stepper_step_pin, True)
-		        	time.sleep(3)
-		        	GPIO.output(elbow_stepper_step_pin, False)
-		        	time.sleep(3)
-			elbow_stepper_LastPos = stepsPerRevolution_elbow
-			#break
-		
-        
-        # positioning the lower arm link for picking
+		GPIO.output(gripper_suction_a, True)
+		GPIO.output(gripper_suction_a, False)
 
-        	if stepsPerRevolution_lower_arm <= 90:
-            		GPIO.output(lower_arm_stepper_dir_pin, True)
-            		for angle in range(stepsPerRevolution_lower_arm):
-                		GPIO.output(lower_arm_stepper_step_pin, True)
-                		time.sleep(3)
-                		GPIO.output(lower_arm_stepper_step_pin, False)
-                		time.sleep(3)
-            		lower_arm_stepper_LastPos = stepsPerRevolution_lower_arm
-			#break
+			# driving arm again up the rail to go to home
 
-        	elif stepsPerRevolution_elbow > 90:
-            		GPIO.output(elbow_stepper_dir_pin, False)
-            		for angle in range(stepsPerRevolution_elbow):
-                		GPIO.output(lower_arm_stepper_step_pin, True)
-                		time.sleep(3)
-                		GPIO.output(lower_arm_stepper_step_pin, False)
-                		time.sleep(3)
-            		lower_arm_stepper_LastPos = stepsPerRevolution_lower_arm
-			#break        
-        	
-		# activating gripper
+		GPIO.output(lift_stepper_dir_pin, True)
+		for angle in range(lift_height):
+		    	GPIO.output(lift_stepper_step_pin, True)
+		    	time.sleep(3)
+		    	GPIO.output(lift_stepper_step_pin, False)
+		    	time.sleep(3)
+		    
+		lift_stepper_LastState = lift_height
 
-        	GPIO.output(gripper_suction_a, True)
-        	GPIO.output(gripper_suction_a, False)
+			# returning the robot arm to home state
 
-        	##########################################################
-        	#                                                        #
-        	# driving down the guide rails                           #
-        	#                                                        #
-        	##########################################################
+		take_stepper_to_home()
+	except:
 
-        	# driving arm up the rail to lift off the object
-
-        	GPIO.output(lift_stepper_dir_pin, True)
-        	for angle in range(lift_height):
-            		GPIO.output(lift_stepper_step_pin, True)
-            		time.sleep(3)
-            		GPIO.output(lift_stepper_step_pin, False)
-            		time.sleep(3)
-            
-        	lift_stepper_LastState = lift_height    # recording last height of the assembly
-
-        	if elbow_stepper_LastState <= 90:
-
-            		GPIO.output(elbow_stepper_dir_pin, True)
-            		for angle in range(elbow_stepper_LastState + 100):
-                		GPIO.output(elbow_stepper_step_pin, True)
-                		time.sleep(3)
-                		GPIO.output(elbow_stepper_step_pin, False)
-                		time.sleep(3)
-        		elbow_stepper_LastState = elbow_stepper_LastState + 100
-
-        	elif elbow_stepper_LastState > 90:
-        		GPIO.output(elbow_stepper_dir_pin, False)
-      			for angle in range(elbow_stepper_LastState - 100):
-        			GPIO.output(elbow_stepper_step_pin, True)
-        		    	time.sleep(3)
-        	         	GPIO.output(elbow_stepper_step_pin, False)
-        	         	time.sleep(3)
-        	 	elbow_stepper_LastState = elbow_stepper_LastState - 100
-
-        	# positioning lower arm link for dropping object
-
-        	if lower_arm_stepper_LastState < 90:
-
-            		GPIO.output(lower_arm_stepper_dir_pin, True)
-            		for angle in range(lower_arm_stepper_LastState + 50):
-                		GPIO.output(lower_arm_stepper_step_pin, True)
-                		time.sleep(3)
-                		GPIO.output(lower_arm_stepper_LastState, False)
-                		time.sleep(3)
-            		lower_arm_stepper_LastState = lower_arm_stepper_LastState + 50
-
-            	elif lower_arm_stepper_LastState > 90:
-                	GPIO.output(lower_arm_stepper_dir_pin, False)
-                	for angle in range(lower_arm_stepper_LastState - 50):
-                    		GPIO.output(lower_arm_stepper_step_pin, True)
-                    		time.sleep(3)
-                    		GPIO.output(lower_arm_stepper_step_pin, False)
-                    		time.sleep(3)
-            		lower_arm_stepper_LastState = lower_arm_stepper_LastState - 50
-
-        # driving arm down the rail to drop
-
-        	GPIO.output(lift_stepper_dir_pin, False)
-        	for angle in range(lift_height):
-            		GPIO.output(lift_stepper_step_pin, True)
-            		time.sleep(3)
-            		GPIO.output(lift_stepper_step_pin, False)
-            		time.sleep(3)
-            
-        	lift_stepper_LastState = lift_height
-
-        	# deactivating gripper for releasing the object
-
-        	GPIO.output(gripper_suction_a, True)
-        	GPIO.output(gripper_suction_a, False)
-
-        	# driving arm again up the rail to go to home
-
-        	GPIO.output(lift_stepper_dir_pin, True)
-        	for angle in range(lift_height):
-            		GPIO.output(lift_stepper_step_pin, True)
-            		time.sleep(3)
-            		GPIO.output(lift_stepper_step_pin, False)
-            		time.sleep(3)
-            
-        	lift_stepper_LastState = lift_height
-
-        	# returning the robot arm to home state
-
-        	take_stepper_to_home()
-
-    	except:
-
-        	print("no new object in view")
+		print("no new object in view")
 
 
-cap=cv2.VideoCapture(0)   #start webcam for frame capturing
+cap = VideoStream(src=0).start()   #start webcam for frame capturing
 
 cm_to_pixel = 11.3 /640.0
 
 while True:
 
-	ret,frame=cap.read()
+	frame=cap.read()
 
     	gray_image1=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
     
