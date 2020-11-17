@@ -110,16 +110,16 @@ def take_stepper_to_home():
 def inverseKinematics(x,y):
 
 	try:
-        
-		theta2 =math.acos(((x**2) + (y**2)-(L1**2)-(L2**2)) / (2 * L1 * L2))
+		
+		theta2 =math.acos((x**2 + y**2 - L1**2 - L2**2) / (2 * L1 * L2))
 		
 		if x < 0 and y < 0:
 
 			theta2 = (-1) * theta2
-		    	theta1 = math.atan(x/y) - math.atan((L2 * math.sin(theta2)) / (L1 + L2 * math.cos(theta2)))
-		    	theta2 = theta2 * 180/math.pi
-		    	theta1 = theta1 * 180/math.pi
-				# Angles adjustment depending in which quadrant the final tool coordinate x,y is
+			theta1 = math.atan(x/y) - math.atan(L2 * math.sin(theta2) / L1 + L2 * math.cos(theta2))
+			theta2 = (theta2 * 180)/math.pi
+			theta1 = (theta1 * 180)/math.pi
+			# Angles adjustment depending in which quadrant the final tool coordinate x,y is
 		if x >= 0 and y >= 0:     # 1st quadrant
 		    	theta1 = 90 -theta1
 
@@ -175,23 +175,22 @@ def inverseKinematics(x,y):
 		# positioning the elbow link
 		
 		if stepsPerRevolution_elbow <= 90:
-		    	GPIO.output(elbow_stepper_dir_pin, True)
-		    	for angle in range(stepsPerRevolution_elbow):
-		        	GPIO.output(elbow_stepper_step_pin, True)
-		        	time.sleep(3)
-		        	GPIO.output(elbow_stepper_step_pin, False)
-		        	time.sleep(3)
-		    	elbow_stepper_LastPos = stepsPerRevolution_elbow
-			#break
-			
-		 elif stepsPerRevolution_elbow > 90:
-		    	GPIO.output(elbow_stepper_dir_pin, False)
-		    	for angle in range(stepsPerRevolution_elbow - 90):
-		        	GPIO.output(elbow_stepper_step_pin, True)
-		        	time.sleep(3)
+			GPIO.output(elbow_stepper_dir_pin, True)
+			for angle in range(stepsPerRevolution_elbow):
+				GPIO.output(elbow_stepper_step_pin, True)
+				time.sleep(3)
 				GPIO.output(elbow_stepper_step_pin, False)
 				time.sleep(3)
-		    	elbow_stepper_LastPos = stepsPerRevolution_elbow
+			elbow_stepper_LastPos = stepsPerRevolution_elbow
+		
+		elif stepsPerRevolution_elbow > 90:
+			GPIO.output(elbow_stepper_dir_pin, False)
+			for angle in range(stepsPerRevolution_elbow - 90):
+				GPIO.output(elbow_stepper_step_pin, True)
+				time.sleep(3)
+				GPIO.output(elbow_stepper_step_pin, False)
+				time.sleep(3)
+		elbow_stepper_LastPos = stepsPerRevolution_elbow
 				#break
 			
 		
@@ -232,29 +231,29 @@ def inverseKinematics(x,y):
 
 		GPIO.output(lift_stepper_dir_pin, True)
 		for angle in range(lift_height):
-		    	GPIO.output(lift_stepper_step_pin, True)
-		    	time.sleep(3)
-		    	GPIO.output(lift_stepper_step_pin, False)
-		  	time.sleep(3)
+			GPIO.output(lift_stepper_step_pin, True)
+			time.sleep(3)
+			GPIO.output(lift_stepper_step_pin, False)
+			time.sleep(3)
 		lift_stepper_LastState = lift_height    # recording last height of the assembly
 
 		if elbow_stepper_LastState <= 90:
-		    	GPIO.output(elbow_stepper_dir_pin, True)
-		    	for angle in range(elbow_stepper_LastState + 100):
-		        	GPIO.output(elbow_stepper_step_pin, True)
-		        	time.sleep(3)
-		        	GPIO.output(elbow_stepper_step_pin, False)
-		        	time.sleep(3)
-		    	elbow_stepper_LastState = elbow_stepper_LastState + 100
+			GPIO.output(elbow_stepper_dir_pin, True)
+			for angle in range(elbow_stepper_LastState + 100):
+				GPIO.output(elbow_stepper_step_pin, True)
+				time.sleep(3)
+				GPIO.output(elbow_stepper_step_pin, False)
+				time.sleep(3)
+			elbow_stepper_LastState = elbow_stepper_LastState + 100
 		
 		elif elbow_stepper_LastState > 90:
-		    	GPIO.output(elbow_stepper_dir_pin, False)
-		    	for angle in range(elbow_stepper_LastState - 100):
-		        	GPIO.output(elbow_stepper_step_pin, True)
-		        	time.sleep(3)
-		        	GPIO.output(elbow_stepper_step_pin, False)
-		        	time.sleep(3)
-		    	elbow_stepper_LastState = elbow_stepper_LastState - 100
+			GPIO.output(elbow_stepper_dir_pin, False)
+			for angle in range(elbow_stepper_LastState - 100):
+				GPIO.output(elbow_stepper_step_pin, True)
+				time.sleep(3)
+				GPIO.output(elbow_stepper_step_pin, False)
+				time.sleep(3)
+		elbow_stepper_LastState = elbow_stepper_LastState - 100
 
 			# positioning lower arm link for dropping object
 
@@ -271,11 +270,11 @@ def inverseKinematics(x,y):
 		elif lower_arm_stepper_LastState > 90:
 			GPIO.output(lower_arm_stepper_dir_pin, False)
 			for angle in range(lower_arm_stepper_LastState - 50):
-		            	GPIO.output(lower_arm_stepper_step_pin, True)
-		            	time.sleep(3)
-		            	GPIO.output(lower_arm_stepper_step_pin, False)
-		            	time.sleep(3)
-		    	lower_arm_stepper_LastState = lower_arm_stepper_LastState - 50
+				GPIO.output(lower_arm_stepper_step_pin, True)
+				time.sleep(3)
+				GPIO.output(lower_arm_stepper_step_pin, False)
+				time.sleep(3)
+		lower_arm_stepper_LastState = lower_arm_stepper_LastState - 50
 
 		# driving arm down the rail to drop
 
@@ -317,14 +316,14 @@ cap = VideoStream(src=0).start()   #start webcam for frame capturing
 cm_to_pixel = 11.3 /640.0
 
 while True:
-
+	
 	frame=cap.read()
-
-    	gray_image1=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-    
-    	cv2.imshow("background",gray_image1)
-    
-    	k=cv2.waitKey(1)      #waits 1sec to check for key press
+	
+	gray_image1=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+	
+	cv2.imshow("background",gray_image1)
+	
+	k=cv2.waitKey(1)      #waits 1sec to check for key press
 	
 	print("capturing background, do not move the camera....")
 	
@@ -336,74 +335,73 @@ while True:
 
         	#break
 
-    	while True:
-
-		if GPIO.input(IR_sensor) == 1:  # if the sensor picks up an object, it captures the frame and gets the difference
-
-			ret,frame=cap.read()
-
-			gray_image2=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-	    
-			cv2.imshow("foreground",gray_image2)
-
-			difference=np.absolute(np.array(np.int16(gray_image1)-np.int16(gray_image2)))
-
-			difference[difference>255]=255
-
-			difference=np.uint8(difference)
-
-			cv2.imshow('difference',difference)
-
-			BW=difference
-
-			BW[BW<=100]=0
-
-			BW[BW>100]=1
-
-			#calculating the x coordinate
-
-			column_sums = np.matrix(np.sum(BW,0))
-
-			column_numbers = np.matrix(np.arange(640))
-
-			column_mult = np.multiply(column_sums,column_numbers)
-
-			total = np.sum(column_mult)
-
-			total_total = np.sum(np.sum(BW))
-
-			column_location = total/total_total
-
-			x_location = column_location * cm_to_pixel
-			#print(x_location)
-
-			#calculating the y coordinate
-
-			row_sums = np.matrix(np.sum(BW,1))
-
-			rows_sums = row_sums.transpose()
-
-			row_numbers = np.matrix(np.arange(480))
-
-			row_mult = np.multiply(row_sums,row_numbers)
-
-			total = np.sum(row_mult)
-
-			total_total = np.sum(np.sum(BW))
-
-			row_location = total/total_total
-
-			y_location = row_location * cm_to_pixel
+while True:
+	
+	if GPIO.input(IR_sensor) == 1: # if the sensor picks up an object, it captures the frame and gets the difference
 		
-			print(x_location, y_location)
+		frame=cap.read()
+		
+		gray_image2=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+		
+		cv2.imshow("foreground",gray_image2)
+		
+		difference=np.absolute(np.array(np.int16(gray_image1)-np.int16(gray_image2)))
+		
+		difference[difference>255]=255
+		
+		difference=np.uint8(difference)
+		
+		cv2.imshow('difference',difference)
+		
+		BW=difference
+		
+		BW[BW<=100]=0
+		
+		BW[BW>100]=1
 
-			inverseKinematics(x_location, y_location)
+		#calculating the x coordinate
+		
+		column_sums = np.matrix(np.sum(BW,0))
+		
+		column_numbers = np.matrix(np.arange(640))
+		
+		column_mult = np.multiply(column_sums,column_numbers)
+		
+		total = np.sum(column_mult)
+		
+		total_total = np.sum(np.sum(BW))
+		
+		column_location = total/total_total
+		
+		x_location = column_location * cm_to_pixel
+		#print(x_location)
 
-			k=cv2.waitKey(1)      #waits 1sec to check for key press
-
-		if k == 27:             #27 is the keyboard number for the escape key
-
-		    break
+		#calculating the y coordinate
+		
+		row_sums = np.matrix(np.sum(BW,1))
+		
+		rows_sums = row_sums.transpose()
+		
+		row_numbers = np.matrix(np.arange(480))
+		
+		row_mult = np.multiply(row_sums,row_numbers)
+		
+		total = np.sum(row_mult)
+		
+		total_total = np.sum(np.sum(BW))
+		
+		row_location = total/total_total
+		
+		y_location = row_location * cm_to_pixel
+		
+		print(x_location, y_location)
+		
+		inverseKinematics(x_location, y_location)
+		
+		k=cv2.waitKey(1)      #waits 1sec to check for key press
+		
+		if k == 27:
+			break
 
 cap.release()
 
