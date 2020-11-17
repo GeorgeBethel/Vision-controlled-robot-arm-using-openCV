@@ -65,9 +65,9 @@ GPIO.setup(lower_arm_stepper_dir_pin, GPIO.OUT)
 GPIO.setup(lower_arm_stepper_step_pin, GPIO.OUT)
 GPIO.setup(gripper_suction_a, GPIO.OUT)
 GPIO.setup(gripper_suction_b, GPIO.OUT)
-GPIO.setup(elbow_encoder, GPIO.INPUT)
-GPIO.setup(lower_arm_encoder, GPIO.INPUT)
-GPIO.setup(IR_sensor, GPIO.INPUT)
+GPIO.setup(elbow_encoder, GPIO.IN)
+GPIO.setup(lower_arm_encoder, GPIO.IN)
+GPIO.setup(IR_sensor, GPIO.IN)
 
 
 # function to take the stepper motor to it's home position
